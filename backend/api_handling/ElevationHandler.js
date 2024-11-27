@@ -1,6 +1,10 @@
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
+//Array to store elevation data
+const elevationData = [];
+//Range of coordinates to get elevation data for
+const range = 1;
 //API call to Open Meteo API to get elevation data
 async function getElevation(latitude, longitude) {
   let latitudes = "";
@@ -25,7 +29,7 @@ async function getElevation(latitude, longitude) {
       for (let j = 0; j < 10; j++) {
         const elevation = data.elevation[(i * 10) + j];
         console.log(`The elevation at latitude ${addDecimalPoint(latitude, i)}, longitude ${addDecimalPoint(longitude, j)} is ${elevation} meters.`);
-        elevationData.push({"latitude": addDecimalPoint(latitude, i), "longtitude": addDecimalPoint(longitude, j), "elevation": elevation});
+        elevationData.push({"la": addDecimalPoint(latitude, i), "lo": addDecimalPoint(longitude, j), "el": elevation});
       }
     }
   } catch (error) {
@@ -37,10 +41,21 @@ async function getElevation(latitude, longitude) {
 async function saveElevationToFile() {
   try {
     const filePath = join('backend/data/', 'elevationData.json');
-    writeFileSync(filePath, JSON.stringify(elevationData, null, 1));
+    writeFileSync(filePath, JSON.stringify(elevationData, null, 0));
     console.log(`Elevation data saved to ${filePath}`);
   } catch (error) {
     console.error('Error:', error);
+  }
+}
+//Fetch elevations in batches of 10
+async function fetchElevations(coordinates) {
+  const batchSize = 10;
+  for (let i = 0; i < coordinates.length; i += batchSize) {
+    const batch = coordinates.slice(i, i + batchSize);
+    const promises = batch.map(coord => getElevation(coord.latitude, coord.longitude));
+    await Promise.all(promises);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    console.log(`Fetched elevations for ${i + 1} to ${i + batchSize} coordinates`);
   }
 }
 //Fetch and save elevations in batches of 10
@@ -50,16 +65,19 @@ async function fetchAndSaveElevations(coordinates) {
     const batch = coordinates.slice(i, i + batchSize);
     const promises = batch.map(coord => getElevation(coord.latitude, coord.longitude));
     await Promise.all(promises);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 50));
     console.log(`Fetched elevations for ${i + 1} to ${i + batchSize} coordinates`);
   }
   await saveElevationToFile();
 }
 //Generate an array of coordinates to get elevation data for
-function generateCoordinates() {
+function generateCoordinates(lt = 7.0, ln = 7.0) {
   const coordinates = [];
-  for (let lat = -89; lat <= 90; lat++) {
-    for (let lon = -179; lon <= 180; lon++) {
+  for (let lat = lt - range; lat <= lt + range ; lat += 0.1) {
+    lat = Math.round(lat * 10) / 10;
+    for (let lon = ln - range; lon <= ln + range; lon += 0.1) {
+      lon = Math.round(lon * 10) / 10;
+      console.log(`Latitude: ${lat}, Longitude: ${lon}`);
       if(lat == 0) coordinates.push({ latitude: -0, longitude: lon });
       if(lon == 0) coordinates.push({ latitude: lat, longitude: -0 });
       coordinates.push({ latitude: lat, longitude: lon });
@@ -68,6 +86,20 @@ function generateCoordinates() {
   return coordinates;
 }
 
+function addDecimalPoint(num, decimalValue) {
+  const isNegativeZero = Object.is(num, -0);
+  const decimalTemp = "0.0" + decimalValue.toString();
+  decimalValue = parseFloat(decimalTemp);
+  if(isNegativeZero) {
+    return -0.01;
+  }
+  if (num < 0) {
+    return Math.round((num - decimalValue) * 100) / 100;
+  } else {
+   return Math.round((num + decimalValue) * 100) / 100;
+  }
+}
+/* DEPRECATED
 //Add a decimal point to a number with respect to -0  
 function addDecimalPoint(num, decimalValue) {
   const isNegativeZero = Object.is(num, -0);
@@ -83,35 +115,17 @@ function addDecimalPoint(num, decimalValue) {
   let result = parseFloat(numStr);
   return result;
 }
-  const coordinates = generateCoordinates();
-  /*const coordinates = [
-    { latitude: 34, longitude: -118 },
-    { latitude: 40, longitude: -74 },
-    { latitude: 51, longitude: -0 },
-    { latitude: 48, longitude: 2 },
-    { latitude: 35, longitude: 139 },
-    { latitude: -33, longitude: 151 },
-    { latitude: 55, longitude: 37 },
-    { latitude: 39, longitude: 116 },
-    { latitude: 19, longitude: 72 },
-    { latitude: -23, longitude: -46 },
-    { latitude: 37, longitude: -122 },
-    { latitude: 52, longitude: 13 },
-    { latitude: 41, longitude: 12 },
-    { latitude: 45, longitude: -73 },
-    { latitude: 28, longitude: 77 },
-    { latitude: -34, longitude: -58 },
-    { latitude: 1, longitude: 103 },
-    { latitude: 31, longitude: 121 },
-    { latitude: 13, longitude: 100 },
-    { latitude: 22, longitude: 114 },
-    { latitude: 40, longitude: 116 },
-    { latitude: 35, longitude: -106 },
-    { latitude: 59, longitude: 18 },
-    { latitude: -0, longitude: 14 },
-    { latitude: 0, longitude: 14 },
-    { latitude: 0, longitude: 25 }
-  ];
-  */
-  const elevationData = [];
-  fetchAndSaveElevations(coordinates);
+*/
+//Export the getElevation function
+export  function ElevationHandler(latitude, longitude) {
+
+  const coordinates = generateCoordinates(latitude, longitude);
+  fetchElevations(coordinates);
+  return elevationData;
+
+}
+
+/* TESTING ONLY
+const coordinates = generateCoordinates();
+fetchAndSaveElevations(coordinates);
+*/
