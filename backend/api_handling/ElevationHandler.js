@@ -50,7 +50,8 @@ async function fetchAndSaveElevations(coordinates) {
     const batch = coordinates.slice(i, i + batchSize);
     const promises = batch.map(coord => getElevation(coord.latitude, coord.longitude));
     await Promise.all(promises);
-    //await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(`Fetched elevations for ${i + 1} to ${i + batchSize} coordinates`);
   }
   await saveElevationToFile();
 }
