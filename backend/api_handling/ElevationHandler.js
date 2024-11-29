@@ -1,5 +1,4 @@
-import { writeFileSync } from 'fs';
-import { join } from 'path';
+
 
 //Array to store elevation data
 const elevationData = [];
@@ -36,17 +35,6 @@ async function getElevation(latitude, longitude) {
     console.error('Error:', error);
   }
 }
-
-//Save elevation data to a JSON file
-async function saveElevationToFile() {
-  try {
-    const filePath = join('backend/data/', 'elevationData.json');
-    writeFileSync(filePath, JSON.stringify(elevationData, null, 0));
-    console.log(`Elevation data saved to ${filePath}`);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}
 //Fetch elevations in batches of 10
 async function fetchElevations(coordinates) {
   const batchSize = 10;
@@ -57,18 +45,6 @@ async function fetchElevations(coordinates) {
     await new Promise(resolve => setTimeout(resolve, 50));
     console.log(`Fetched elevations for ${i + 1} to ${i + batchSize} coordinates`);
   }
-}
-//Fetch and save elevations in batches of 10
-async function fetchAndSaveElevations(coordinates) {
-  const batchSize = 10;
-  for (let i = 0; i < coordinates.length; i += batchSize) {
-    const batch = coordinates.slice(i, i + batchSize);
-    const promises = batch.map(coord => getElevation(coord.latitude, coord.longitude));
-    await Promise.all(promises);
-    await new Promise(resolve => setTimeout(resolve, 50));
-    console.log(`Fetched elevations for ${i + 1} to ${i + batchSize} coordinates`);
-  }
-  await saveElevationToFile();
 }
 //Generate an array of coordinates to get elevation data for
 function generateCoordinates(lt = 7.0, ln = 7.0) {
@@ -117,10 +93,10 @@ function addDecimalPoint(num, decimalValue) {
 }
 */
 //Export the getElevation function
-export  function ElevationHandler(latitude, longitude) {
+export async function ElevationHandler(latitude, longitude) {
 
   const coordinates = generateCoordinates(latitude, longitude);
-  fetchElevations(coordinates);
+  await fetchElevations(coordinates);
   return elevationData;
 
 }
