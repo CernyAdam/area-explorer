@@ -15,7 +15,7 @@ export function getFromLocalCache() {
 export function CacheHandler(latitude, longitude) {
   const elevationData = getFromLocalCache();
   if (elevationData) {
-    console.log(`Elevation data found in cache: ${elevationData}`);
+    console.log(`Elevation data found in cache`);
   } else {
     console.log("Elevation data not found in cache");
     saveToLocalCache(latitude, longitude);

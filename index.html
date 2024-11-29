@@ -8,8 +8,10 @@
 <body>
     <h1>Welcome to Area Explorer</h1>
     <script type="module">
-        import { CacheHandler,  getFromLocalCache} from './backend/CacheHandler.js';
+        import { CacheHandler,  getFromLocalCache } from './backend/CacheHandler.js';
+        import { LocationHandler } from './backend/LocationHandler.js';
         CacheHandler(40,-111);
+        LocationHandler().then((data) => console.log(data));
     </script>
 </body>
 </html>
