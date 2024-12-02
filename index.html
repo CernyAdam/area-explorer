@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Area Explorer</title>
+    <link href="./frontend/styles/main.css" rel="stylesheet" type="text/css">
+    <script type="module" src="./frontend/3d/terrain.js"></script>
 </head>
 <body>
-    <h1>Welcome to Area Explorer</h1>
-    <script type="module">
-        import { CacheHandler,  getFromLocalCache } from './backend/CacheHandler.js';
-        import { LocationHandler } from './backend/LocationHandler.js';
-        CacheHandler(40,-111);
-        LocationHandler().then((data) => console.log(data));
-    </script>
+    <!--Tree.js scene-->
+    <div id="initial-scene">
+    </div>
 </body>
 </html>
